@@ -156,7 +156,7 @@ poetry run djlint social_insecurity/templates/ --reformat
 
 
 
-### Alternative Installation with pip
+# Alternative Installation with pip
 
 If you prefer not to use Poetry or encounter issues with its installation, you can  create a virtual environment and install the dependencies using pip and the provided requirements.txt file.
 
