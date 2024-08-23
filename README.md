@@ -14,6 +14,7 @@ There are several comments in the code from the “previous developers”, who d
 Social Insecurity requires Python 3.9 or higher to run. If you do not have Python installed, you can download it from the [official website](https://www.python.org/downloads/).
 
 This project uses [Poetry](https://python-poetry.org/). It is a tool that simplifies the process of managing dependencies and virtual environments for Python projects. To install Poetry, follow the instructions in the [official documentation](https://python-poetry.org/docs/#installation).
+> **Note**: If you are not familiar with Poetry or prefer not to use it, you can skip the section on Poetry and follow the [Alternative Installation with pip](#alternative-installation-with-pip) instead.
 
 > [!IMPORTANT]
 > Poetry is a multi-platform tool, but occasionally it can be difficult to install on some operating systems. If you are having trouble, then try one of the alternative installation instructions for your operating system. If all else fails, the file `requirements.txt` can be used to install the required packages using pip.
@@ -160,7 +161,7 @@ poetry run djlint social_insecurity/templates/ --reformat
 
 If you prefer not to use Poetry or encounter issues with its installation, you can  create a virtual environment and install the dependencies using pip and the provided requirements.txt file.
 
-## Step 1: Create a Virtual Environment
+### Step 1: Create a Virtual Environment
 
 First, navigate to the root directory of the project in your terminal and create a virtual environment using the following command:
 
@@ -170,7 +171,7 @@ python -m venv venv
 ```
 This will create a new directory named venv in your project root, which contains the virtual environment.
 
-## Step 2: Activate the Virtual Environment
+### Step 2: Activate the Virtual Environment
 
 To activate the virtual environment, use the following command:
 
@@ -185,12 +186,12 @@ To activate the virtual environment, use the following command:
 Once activated venv, your terminal prompt should change to indicate that you are now working within the virtual environment.
 
 
-## Step 3: Install Dependencies
+### Step 3: Install Dependencies
   With the virtual environment activated, install the project dependencies by running:
 ```shell
    pip install -r requirements.txt
 ``` 
-## Step 4:Running the Program 
+### Step 4:Running the Program 
 
   After you have install the requirments, run the program using. 
   ```shell
