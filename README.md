@@ -154,6 +154,52 @@ To format all templates:
 poetry run djlint social_insecurity/templates/ --reformat
 ```
 
+
+
+### Alternative Installation with pip
+
+If you prefer not to use Poetry or encounter issues with its installation, you can  create a virtual environment and install the dependencies using pip and the provided requirements.txt file.
+
+## Step 1: Create a Virtual Environment
+
+First, navigate to the root directory of the project in your terminal and create a virtual environment using the following command:
+
+```shell
+python -m venv venv
+
+```
+This will create a new directory named venv in your project root, which contains the virtual environment.
+
+## Step 2: Activate the Virtual Environment
+
+To activate the virtual environment, use the following command:
+
+   On windows:
+   ```shell
+  venv\Scripts\activate
+```
+  On Mac:
+  ```shell
+   source venv/bin/activate
+``` 
+Once activated venv, your terminal prompt should change to indicate that you are now working within the virtual environment.
+
+
+## Step 3: Install Dependencies
+  With the virtual environment activated, install the project dependencies by running:
+```shell
+   pip install -r requirements.txt
+``` 
+## Step 4:Running the Program 
+
+  After you have install the requirments, run the program using. 
+  ```shell
+   python social_insecurity.py
+``` 
+or 
+ ```shell
+   flask run  
+``` 
 ### Inspecting the database
 
 During development, you might like to inspect the SQLite database generated and used by the application. A good, multi-platform program for this task is DB Browser for SQLite. To install it, follow the [official installation instruction](https://sqlitebrowser.org/dl/).
