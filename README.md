@@ -14,7 +14,8 @@ There are several comments in the code from the “previous developers”, who d
 Social Insecurity requires Python 3.9 or higher to run. If you do not have Python installed, you can download it from the [official website](https://www.python.org/downloads/).
 
 This project uses [Poetry](https://python-poetry.org/). It is a tool that simplifies the process of managing dependencies and virtual environments for Python projects. To install Poetry, follow the instructions in the [official documentation](https://python-poetry.org/docs/#installation).
-> **Note**: If you are not familiar with Poetry or prefer not to use it, you can skip the section on Poetry and follow the [Alternative Installation with pip](#alternative-installation-with-pip) instead.
+**Note**: **If you are not familiar with Poetry or prefer not to use it, you can skip the section on Poetry and follow the [Alternative Installation with pip](#alternative-installation-with-pip) instead.**
+
 
 > [!IMPORTANT]
 > Poetry is a multi-platform tool, but occasionally it can be difficult to install on some operating systems. If you are having trouble, then try one of the alternative installation instructions for your operating system. If all else fails, the file `requirements.txt` can be used to install the required packages using pip.
