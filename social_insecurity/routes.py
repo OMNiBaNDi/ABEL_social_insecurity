@@ -228,11 +228,16 @@ def profile():
     user = sqlite.query(get_user, one=True)
 
     if profile_form.is_submitted():
+        sanitized_education = bleach.clean(profile_form.education.data)
+        sanitized_employment = bleach.clean(profile_form.employment.data)
+        sanitized_music = bleach.clean(profile_form.music.data)
+        sanitized_movie = bleach.clean(profile_form.movie.data)
+        sanitized_nationality = bleach.clean(profile_form.nationality.data)
         update_profile = f"""
             UPDATE Users
-            SET education='{profile_form.education.data}', employment='{profile_form.employment.data}',
-                music='{profile_form.music.data}', movie='{profile_form.movie.data}',
-                nationality='{profile_form.nationality.data}', birthday='{profile_form.birthday.data}'
+            SET education='{sanitized_education}', employment='{sanitized_employment}',
+                music='{sanitized_music}', movie='{sanitized_movie}',
+                nationality='{sanitized_nationality}', birthday='{profile_form.birthday.data}'
             WHERE username='{username}';
             """
         sqlite.query(update_profile)
