@@ -7,10 +7,14 @@ It also contains the SQL queries used for communicating with the database.
 from pathlib import Path
 
 from flask import current_app as app
-from flask import flash, redirect, render_template, send_from_directory, url_for
+from flask import flash, redirect, render_template, send_from_directory, url_for, request
 
 from social_insecurity import sqlite
 from social_insecurity.forms import CommentsForm, FriendsForm, IndexForm, PostForm, ProfileForm
+
+from flask_login import login_user, logout_user, login_required
+import bcrypt
+from social_insecurity.database import get_user_by_username
 
 
 @app.route("/", methods=["GET", "POST"])
@@ -24,34 +28,41 @@ def index():
     If no form was submitted, it simply renders the index page.
     """
     index_form = IndexForm()
-    login_form = index_form.login
     register_form = index_form.register
 
-    if login_form.is_submitted() and login_form.submit.data:
-        get_user = f"""
-            SELECT *
-            FROM Users
-            WHERE username = '{login_form.username.data}';
-            """
-        user = sqlite.query(get_user, one=True)
-
-        if user is None:
-            flash("Sorry, this user does not exist!", category="warning")
-        elif user["password"] != login_form.password.data:
-            flash("Sorry, wrong password!", category="warning")
-        elif user["password"] == login_form.password.data:
-            return redirect(url_for("stream", username=login_form.username.data))
-
-    elif register_form.is_submitted() and register_form.submit.data:
+    # Registration logic
+    if register_form.is_submitted() and register_form.submit.data:
+        hashed_password = bcrypt.hashpw(register_form.password.data.encode(), bcrypt.gensalt())
         insert_user = f"""
             INSERT INTO Users (username, first_name, last_name, password)
-            VALUES ('{register_form.username.data}', '{register_form.first_name.data}', '{register_form.last_name.data}', '{register_form.password.data}');
-            """
+            VALUES ('{register_form.username.data}', '{register_form.first_name.data}', '{register_form.last_name.data}', '{hashed_password.decode()}');
+        """
         sqlite.query(insert_user)
         flash("User successfully created!", category="success")
         return redirect(url_for("index"))
 
     return render_template("index.html.j2", title="Welcome", form=index_form)
+
+@app.route("/login", methods=["POST"])
+def login():
+    """Handles user login."""
+    username = request.form.get("username")
+    password = request.form.get("password")
+    user = get_user_by_username(sqlite, username)  # Retrieve user by username
+
+    if user and bcrypt.checkpw(password.encode(), user.password.encode()):  # Password validation
+        login_user(user)
+        return redirect(url_for("stream", username=username))
+    else:
+        flash("Invalid username or password", category="danger")
+        return redirect(url_for("index"))
+    
+@app.route("/logout")
+@login_required
+def logout():
+    logout_user()
+    flash("You have been logged out.", category="info")
+    return redirect(url_for("index"))
 
 
 @app.route("/stream/<string:username>", methods=["GET", "POST"])
