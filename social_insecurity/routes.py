@@ -48,9 +48,10 @@ def login():
     """Handles user login."""
     username = request.form.get("username")
     password = request.form.get("password")
-    user = get_user_by_username(sqlite, username)  # Retrieve user by username
+    user = get_user_by_username(sqlite, username)
 
-    if user and bcrypt.checkpw(password.encode(), user.password.encode()):  # Password validation
+    # Verify password using bcrypt
+    if user and bcrypt.checkpw(password.encode(), user.password.encode()):
         login_user(user)
         return redirect(url_for("stream", username=username))
     else:
