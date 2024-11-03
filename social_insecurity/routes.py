@@ -5,11 +5,11 @@ It also contains the SQL queries used for communicating with the database.
 """
 
 from pathlib import Path
-
+import bleach
 import bcrypt
 from flask import current_app as app
-from flask import flash, redirect, render_template, request, send_from_directory, url_for
-from flask_login import login_required, login_user, logout_user
+from flask import flash, redirect, render_template, request, send_from_directory, url_for, session
+from flask_login import login_required, login_user, logout_user, current_user
 
 from social_insecurity import sqlite
 
@@ -30,26 +30,10 @@ def index():
     """
     index_form = IndexForm()
     register_form = index_form.register
-
-    # Registration logic
-    if register_form.is_submitted() and register_form.submit.data:
-        hashed_password = bcrypt.hashpw(register_form.password.data.encode(), bcrypt.gensalt())
-        insert_user = f"""
-            INSERT INTO Users (username, first_name, last_name, password)
-            VALUES ('{register_form.username.data}', '{register_form.first_name.data}', '{register_form.last_name.data}', '{hashed_password.decode()}');
-        """
-        sqlite.query(insert_user)
-        flash("User successfully created!", category="success")
-        return redirect(url_for("index"))
-
-    return render_template("index.html.j2", title="Welcome", form=index_form)
-
-@app.route("/login", methods=["POST"])
-def login():
-    """Handles user login."""
-    login_form = LoginForm()
-    if login_form.validate_on_submit():
+    login_form = index_form.login
+    if login_form.is_submitted() and login_form.validate_on_submit():
         username = login_form.username.data
+        
         password = login_form.password.data
         user = get_user_by_username(sqlite, username)  # Retrieve user by username
 
@@ -59,8 +43,24 @@ def login():
         else:
             flash("Invalid username or password", category="danger")
             return redirect(url_for("index"))
-    flash("CSRF token missing or invalid", category="danger")
-    return redirect(url_for("index"))
+    
+
+    # Registration logic
+    elif register_form.is_submitted() and register_form.submit.data:
+        sanitized_first_name = bleach.clean(register_form.first_name.data)
+        sanitized_last_name = bleach.clean(register_form.last_name.data)
+        sanitized_username = bleach.clean(register_form.username.data)
+        hashed_password = bcrypt.hashpw(register_form.password.data.encode(), bcrypt.gensalt())
+        insert_user = f"""
+            INSERT INTO Users (username, first_name, last_name, password)
+            VALUES ('{sanitized_username}', '{sanitized_first_name}', '{sanitized_last_name}', '{hashed_password.decode()}');
+        """
+        sqlite.query(insert_user)
+        flash("User successfully created!", category="success")
+        return redirect(url_for("index"))
+
+    return render_template("index.html.j2", title="Welcome", form=index_form)
+
     
 @app.route("/logout")
 @login_required
@@ -70,8 +70,9 @@ def logout():
     return redirect(url_for("index"))
 
 
-@app.route("/stream/<string:username>", methods=["GET", "POST"])
-def stream(username: str):
+@app.route("/stream", methods=["GET", "POST"])
+@login_required
+def stream():#removed username: str
     """Provides the stream page for the application.
 
     If a form was submitted, it reads the form data and inserts a new post into the database.
@@ -79,6 +80,7 @@ def stream(username: str):
     Otherwise, it reads the username from the URL and displays all posts from the user and their friends.
     """
     post_form = PostForm()
+    username = current_user.username #added
     get_user = f"""
         SELECT *
         FROM Users
@@ -90,10 +92,10 @@ def stream(username: str):
         if post_form.image.data:
             path = Path(app.instance_path) / app.config["UPLOADS_FOLDER_PATH"] / post_form.image.data.filename
             post_form.image.data.save(path)
-
+        sanitized_content = bleach.clean(post_form.content.data)
         insert_post = f"""
             INSERT INTO Posts (u_id, content, image, creation_time)
-            VALUES ({user["id"]}, '{post_form.content.data}', '{post_form.image.data.filename}', CURRENT_TIMESTAMP);
+            VALUES ({user["id"]}, '{sanitized_content}', '{post_form.image.data.filename}', CURRENT_TIMESTAMP);
             """
         sqlite.query(insert_post)
         return redirect(url_for("stream", username=username))
@@ -108,8 +110,9 @@ def stream(username: str):
     return render_template("stream.html.j2", title="Stream", username=username, form=post_form, posts=posts)
 
 
-@app.route("/comments/<string:username>/<int:post_id>", methods=["GET", "POST"])
-def comments(username: str, post_id: int):
+@app.route("/comments/<int:post_id>", methods=["GET", "POST"])
+
+def comments(post_id: int):
     """Provides the comments page for the application.
 
     If a form was submitted, it reads the form data and inserts a new comment into the database.
@@ -117,6 +120,7 @@ def comments(username: str, post_id: int):
     Otherwise, it reads the username and post id from the URL and displays all comments for the post.
     """
     comments_form = CommentsForm()
+    username = current_user.username #added
     get_user = f"""
         SELECT *
         FROM Users
@@ -125,9 +129,10 @@ def comments(username: str, post_id: int):
     user = sqlite.query(get_user, one=True)
 
     if comments_form.is_submitted():
+        sanitized_comment = bleach.clean(comments_form.comment.data)
         insert_comment = f"""
             INSERT INTO Comments (p_id, u_id, comment, creation_time)
-            VALUES ({post_id}, {user["id"]}, '{comments_form.comment.data}', CURRENT_TIMESTAMP);
+            VALUES ({post_id}, {user["id"]}, '{sanitized_comment}', CURRENT_TIMESTAMP);
             """
         sqlite.query(insert_comment)
 
@@ -149,8 +154,9 @@ def comments(username: str, post_id: int):
     )
 
 
-@app.route("/friends/<string:username>", methods=["GET", "POST"])
-def friends(username: str):
+@app.route("/friends", methods=["GET", "POST"])
+@login_required
+def friends():
     """Provides the friends page for the application.
 
     If a form was submitted, it reads the form data and inserts a new friend into the database.
@@ -158,6 +164,7 @@ def friends(username: str):
     Otherwise, it reads the username from the URL and displays all friends of the user.
     """
     friends_form = FriendsForm()
+    username = current_user.username #added
     get_user = f"""
         SELECT *
         FROM Users
@@ -202,8 +209,9 @@ def friends(username: str):
     return render_template("friends.html.j2", title="Friends", username=username, friends=friends, form=friends_form)
 
 
-@app.route("/profile/<string:username>", methods=["GET", "POST"])
-def profile(username: str):
+@app.route("/profile", methods=["GET", "POST"])
+@login_required
+def profile():
     """Provides the profile page for the application.
 
     If a form was submitted, it reads the form data and updates the user's profile in the database.
@@ -211,6 +219,7 @@ def profile(username: str):
     Otherwise, it reads the username from the URL and displays the user's profile.
     """
     profile_form = ProfileForm()
+    username = current_user.username #added
     get_user = f"""
         SELECT *
         FROM Users
@@ -233,6 +242,7 @@ def profile(username: str):
 
 
 @app.route("/uploads/<string:filename>")
+@login_required
 def uploads(filename):
     """Provides an endpoint for serving uploaded files."""
     return send_from_directory(Path(app.instance_path) / app.config["UPLOADS_FOLDER_PATH"], filename)

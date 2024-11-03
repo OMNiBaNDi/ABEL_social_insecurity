@@ -16,7 +16,6 @@ from flask_wtf.csrf import CSRFProtect
 
 from social_insecurity.config import Config
 from social_insecurity.database import SQLite3, User
-from datetime import timedelta
 from social_insecurity.database import SQLite3
 
 sqlite = SQLite3()
