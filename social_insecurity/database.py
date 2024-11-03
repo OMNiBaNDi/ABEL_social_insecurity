@@ -18,6 +18,7 @@ from pathlib import Path
 from typing import Any, Optional, cast
 
 from flask import Flask, current_app, g
+from flask_login import UserMixin
 
 
 class SQLite3:
@@ -139,3 +140,32 @@ class SQLite3:
         conn = cast(sqlite3.Connection, getattr(g, "flask_sqlite3_connection", None))
         if conn is not None:
             conn.close()
+
+
+
+class User(UserMixin):
+    """A user model compatible with Flask-Login."""
+
+    def __init__(self, id, username, password):
+        self.id = id
+        self.username = username
+        self.password = password
+
+    def get_id(self):
+        """Return user ID as a string for Flask-Login compatibility."""
+        return str(self.id)
+    
+    
+def get_user_by_username(sqlite: SQLite3, username: str) -> Optional[User]:
+    """Fetch a user by username and return a User object."""
+    user_data = sqlite.query("SELECT * FROM Users WHERE username = ?", username, one=True)
+    if user_data:
+        return User(id=user_data["id"], username=user_data["username"], password=user_data["password"])
+    return None
+
+def get_user_by_id(sqlite: SQLite3, user_id: str) -> Optional[User]:
+    """Fetch a user by ID and return a User object."""
+    user_data = sqlite.query("SELECT * FROM Users WHERE id = ?", user_id, one=True)
+    if user_data:
+        return User(id=user_data["id"], username=user_data["username"], password=user_data["password"])
+    return None

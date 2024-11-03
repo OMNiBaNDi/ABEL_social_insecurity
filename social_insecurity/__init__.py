@@ -8,22 +8,36 @@ from shutil import rmtree
 from typing import cast
 
 from flask import Flask, current_app
+from flask_login import LoginManager
 
 from social_insecurity.config import Config
-from social_insecurity.database import SQLite3
+from social_insecurity.database import SQLite3, User
+from datetime import timedelta
 
-# from flask_login import LoginManager
+
 # from flask_bcrypt import Bcrypt
 # from flask_wtf.csrf import CSRFProtect
 
 sqlite = SQLite3()
 # TODO: Handle login management better, maybe with flask_login?
-# login = LoginManager()
+login_manager = LoginManager()
+login_manager.login_view = 'index'
 # TODO: The passwords are stored in plaintext, this is not secure at all. I should probably use bcrypt or something
 # bcrypt = Bcrypt()
 # TODO: The CSRF protection is not working, I should probably fix that
 # csrf = CSRFProtect()
 
+# Configure session security
+login_manager.remember_cookie_duration = timedelta(hours=1)  # Set session timeout
+login_manager.session_protection = "strong" 
+
+@login_manager.user_loader
+def load_user(user_id):
+    """Fetch user object by ID to manage session."""
+    user_data = sqlite.query("SELECT * FROM Users WHERE id = ?", user_id, one=True)
+    if user_data:
+        return User(id=user_data["id"], username=user_data["username"], password=user_data["password"])
+    return None
 
 def create_app(test_config=None) -> Flask:
     """Create and configure the Flask application."""
@@ -33,12 +47,13 @@ def create_app(test_config=None) -> Flask:
         app.config.from_object(test_config)
 
     sqlite.init_app(app, schema="schema.sql")
-    # login.init_app(app)
+    login_manager.init_app(app)
     # bcrypt.init_app(app)
     # csrf.init_app(app)
 
     with app.app_context():
         create_uploads_folder(app)
+        import social_insecurity.routes
 
     @app.cli.command("reset")
     def reset_command() -> None:
