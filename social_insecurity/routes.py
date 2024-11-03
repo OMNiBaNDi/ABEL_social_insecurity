@@ -6,15 +6,16 @@ It also contains the SQL queries used for communicating with the database.
 
 from pathlib import Path
 
+import bcrypt
 from flask import current_app as app
-from flask import flash, redirect, render_template, send_from_directory, url_for, request
+from flask import flash, redirect, render_template, request, send_from_directory, url_for
+from flask_login import login_required, login_user, logout_user
 
 from social_insecurity import sqlite
-from social_insecurity.forms import CommentsForm, FriendsForm, IndexForm, PostForm, ProfileForm
 
-from flask_login import login_user, logout_user, login_required
-import bcrypt
+#import bcrypt
 from social_insecurity.database import get_user_by_username
+from social_insecurity.forms import CommentsForm, FriendsForm, IndexForm, LoginForm, PostForm, ProfileForm
 
 
 @app.route("/", methods=["GET", "POST"])
@@ -46,16 +47,20 @@ def index():
 @app.route("/login", methods=["POST"])
 def login():
     """Handles user login."""
-    username = request.form.get("username")
-    password = request.form.get("password")
-    user = get_user_by_username(sqlite, username)  # Retrieve user by username
+    login_form = LoginForm()
+    if login_form.validate_on_submit():
+        username = login_form.username.data
+        password = login_form.password.data
+        user = get_user_by_username(sqlite, username)  # Retrieve user by username
 
-    if user and bcrypt.checkpw(password.encode(), user.password.encode()):  # Password validation
-        login_user(user)
-        return redirect(url_for("stream", username=username))
-    else:
-        flash("Invalid username or password", category="danger")
-        return redirect(url_for("index"))
+        if user and bcrypt.checkpw(password.encode(), user.password.encode()):  # Password validation
+            login_user(user)
+            return redirect(url_for("stream", username=username))
+        else:
+            flash("Invalid username or password", category="danger")
+            return redirect(url_for("index"))
+    flash("CSRF token missing or invalid", category="danger")
+    return redirect(url_for("index"))
     
 @app.route("/logout")
 @login_required

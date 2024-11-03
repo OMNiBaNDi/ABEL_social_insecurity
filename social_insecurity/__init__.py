@@ -3,6 +3,7 @@
 The package contains the Flask application factory.
 """
 
+from datetime import timedelta
 from pathlib import Path
 from shutil import rmtree
 from typing import cast
@@ -15,13 +16,10 @@ from flask_login import LoginManager
 from flask_wtf.csrf import CSRFProtect
 
 from social_insecurity.config import Config
-from social_insecurity.database import SQLite3, User
-from datetime import timedelta
-
 
 # from flask_bcrypt import Bcrypt
 # from flask_wtf.csrf import CSRFProtect
-from social_insecurity.database import SQLite3
+from social_insecurity.database import SQLite3, User
 
 sqlite = SQLite3()
 # TODO: Handle login management better, maybe with flask_login?
