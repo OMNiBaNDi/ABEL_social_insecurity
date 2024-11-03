@@ -9,12 +9,12 @@ from typing import cast
 
 from flask import Flask, current_app
 
-from social_insecurity.config import Config
-from social_insecurity.database import SQLite3
-
 # from flask_login import LoginManager
 # from flask_bcrypt import Bcrypt
-# from flask_wtf.csrf import CSRFProtect
+from flask_wtf.csrf import CSRFProtect
+
+from social_insecurity.config import Config
+from social_insecurity.database import SQLite3
 
 sqlite = SQLite3()
 # TODO: Handle login management better, maybe with flask_login?
@@ -22,7 +22,7 @@ sqlite = SQLite3()
 # TODO: The passwords are stored in plaintext, this is not secure at all. I should probably use bcrypt or something
 # bcrypt = Bcrypt()
 # TODO: The CSRF protection is not working, I should probably fix that
-# csrf = CSRFProtect()
+csrf = CSRFProtect()
 
 
 def create_app(test_config=None) -> Flask:
@@ -35,7 +35,7 @@ def create_app(test_config=None) -> Flask:
     sqlite.init_app(app, schema="schema.sql")
     # login.init_app(app)
     # bcrypt.init_app(app)
-    # csrf.init_app(app)
+    csrf.init_app(app)
 
     with app.app_context():
         create_uploads_folder(app)
