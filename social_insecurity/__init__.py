@@ -11,22 +11,20 @@ from typing import cast
 from flask import Flask, current_app
 from flask_login import LoginManager
 
-# from flask_login import LoginManager
-# from flask_bcrypt import Bcrypt
+from flask_bcrypt import Bcrypt
 from flask_wtf.csrf import CSRFProtect
 
 from social_insecurity.config import Config
-
-# from flask_bcrypt import Bcrypt
-# from flask_wtf.csrf import CSRFProtect
 from social_insecurity.database import SQLite3, User
+from datetime import timedelta
+from social_insecurity.database import SQLite3
 
 sqlite = SQLite3()
 # TODO: Handle login management better, maybe with flask_login?
 login_manager = LoginManager()
 login_manager.login_view = 'index'
 # TODO: The passwords are stored in plaintext, this is not secure at all. I should probably use bcrypt or something
-# bcrypt = Bcrypt()
+bcrypt = Bcrypt()
 # TODO: The CSRF protection is not working, I should probably fix that
 csrf = CSRFProtect()
 
@@ -51,7 +49,7 @@ def create_app(test_config=None) -> Flask:
 
     sqlite.init_app(app, schema="schema.sql")
     login_manager.init_app(app)
-    # bcrypt.init_app(app)
+    bcrypt.init_app(app)
     csrf.init_app(app)
 
     with app.app_context():
